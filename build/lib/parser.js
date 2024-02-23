@@ -58,17 +58,24 @@ function parse(data) {
     }
     lines = lines.map((x) => {
         for (const key in imports) {
-            if (x.indexOf(key) > -1)
-                return x.replaceAll(key, imports[key]);
+            if (x.indexOf(key + ',') > -1 || x.indexOf(key + '.') > -1) {
+                x = x.replaceAll(key + ',', imports[key] + ',');
+                return x.replaceAll(key + '.', imports[key] + '.');
+            }
         }
         return x;
     });
     for (const field in fields) {
         for (const line of lines) {
-            if (line.indexOf(`.${field}.`) < 0)
+            if (line.indexOf(`.${field}.`) < 0 && line.indexOf(`${field}.`) < 0)
                 continue;
             let [key, val] = line.split("=").map((x) => x.trim());
-            [, , key] = key.split(".");
+            if (line.indexOf(`.${field}.`) >= 0) {
+                [, , key] = key.split(".");
+            }
+            else {
+                [, key] = key.split(".");
+            }
             let value = val.replaceAll('"', "");
             if (val === "true" || val === "false")
                 value = Boolean(value);
@@ -111,7 +118,7 @@ function parse(data) {
                         if (x.includes(lib))
                             return x.replace(lib, imports[lib]);
                         else
-                            return x.split(".")[1];
+                            return x.split(".")[1] || x.split(".")[0];
                     }
                 });
             }
