@@ -1,6 +1,6 @@
 {
   "name": "@flyqie/azurlane-protocol-parser",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Parses .proto files from lua source of mobile game: Azur Lane",
   "author": {
     "name": "Ege Tirpan",
