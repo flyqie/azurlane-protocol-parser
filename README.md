@@ -4,10 +4,6 @@ Parses `.proto` profobuf network protocol files for the mobile game Azur Lane fr
 
 ## Usage
 
-```js
-const fs = require("fs");
-const { parse } = require("azurlane-protocol-parser");
-
-const parsedFile = parse(protocolFileSource);
-fs.writeFileSync(filePath, parsedFile);
+```
+protoc -I=D:\blhx_proto\protocol --go_out=D:\blhx_proto\protocol\go_out *.proto
 ```
