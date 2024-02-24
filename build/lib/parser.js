@@ -32,10 +32,12 @@ function parse(data) {
     const imports = {};
     const messages = {};
     const fields = {};
+    const pbMessages = {};
     const moduleNameMatcher = /module\("(.+?)"\)/i;
     const importMatcher = /(.+?) = require\("(.+?)"\)/i;
     const descriptorMatcher = /(.+?) = slot0.Descriptor\(\)/i;
     const fieldDescriptorMatcher = /(.+?) = slot0.FieldDescriptor\(\)/i;
+    const pbMessageMatcher = /(.+?) = slot0.Message\((.+?)\)/i;
     for (const line of lines) {
         if (importMatcher.test(line)) {
             const [, key, value] = line.match(importMatcher);
@@ -54,6 +56,12 @@ function parse(data) {
             if (name)
                 console.debug(`Module name found: ${name}`);
             moduleName = name;
+        }
+        else if (pbMessageMatcher.test(line)) {
+            const [, value, key] = line.match(pbMessageMatcher);
+            if (key.startsWith('slot')) {
+                pbMessages[key] = value;
+            }
         }
     }
     lines = lines.map((x) => {
@@ -140,9 +148,20 @@ function parse(data) {
         file.push("");
     }
     for (const message in messages) {
-        const msgLines = [`message ${message} {`];
+        const msgLines = [];
+        if (message.startsWith('slot')) {
+            msgLines.push(`message ${messages[message].name} {`);
+        }
+        else {
+            msgLines.push(`message ${message} {`);
+        }
         const msgFields = messages[message].fields.sort((a, b) => a.index - b.index);
         for (const field of msgFields) {
+            if (field.type === 11 && field.message_type.startsWith('slot')) {
+                if (pbMessages[field.message_type]) {
+                    field.message_type = pbMessages[field.message_type];
+                }
+            }
             msgLines.push(`  ${LABEL_MAP[field.label]} ${field.type === 11 ? field.message_type : TYPE_MAP[field.type]} ${field.name} = ${field.number};`);
         }
         msgLines.push("}", "");
