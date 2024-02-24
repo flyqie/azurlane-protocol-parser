@@ -1,5 +1,5 @@
 {
-  "name": "azurlane-protocol-parser",
+  "name": "@flyqie/azurlane-protocol-parser",
   "version": "1.0.0",
   "description": "Parses .proto files from lua source of mobile game: Azur Lane",
   "author": {
