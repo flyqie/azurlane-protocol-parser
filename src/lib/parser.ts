@@ -30,6 +30,7 @@ export function parse(data: string): string {
 
   let moduleName = "";
   const imports = {};
+  const _imports = {};
   const messages = {};
   const fields = {};
   const pbMessages = {};
@@ -43,7 +44,7 @@ export function parse(data: string): string {
   for (const line of lines) {
     if (importMatcher.test(line)) {
       const [, key, value] = line.match(importMatcher);
-      imports[key] = value.split("_")[0];
+      _imports[key] = value.split("_")[0];
     } else if (descriptorMatcher.test(line)) {
       const [key] = line.split("=").map((x) => x.trim());
       messages[key] = {};
@@ -59,6 +60,26 @@ export function parse(data: string): string {
       if (key.startsWith('slot')) {
 		pbMessages[key] = value;
 	  }
+    }
+  }
+  
+  Object.keys(_imports).forEach(key => {
+    if (!key.endsWith('.message_type')) {
+      imports[key] = _imports[key];
+    }
+  });
+  for (const key in _imports) {
+    if (key.endsWith('.message_type')) {
+      let new_exist = false;
+      for (const key2 in _imports) {
+        if (imports[key2] === _imports[key]) {
+          new_exist = true;
+          break;
+        }
+      }
+      if (!new_exist) {
+        imports["SHOULD_NEVER_REPLACE_IMPORT_KEY_AZURLANE_" + key] = _imports[key];
+      }
     }
   }
 
@@ -138,7 +159,7 @@ export function parse(data: string): string {
     }
   }
 
-  let file = [`syntax = "proto2";`, `package azurlane.${moduleName};`, ""];
+  let file = [`syntax = "proto2";`, `package azurlane.${moduleName};`, `option go_package = "azurlane_proto_go/${moduleName}";`, ""];
   if (Object.keys(imports).length > 1) {
     for (const lib in imports) {
       if (lib === "slot0") continue;
@@ -164,6 +185,10 @@ export function parse(data: string): string {
 		  field.message_type = pbMessages[field.message_type];
 		}
 	  }
+	  if (field.type === 11 && field.message_type.startsWith('require(')) {
+		const [key, value] = field.message_type.match(/require\((.+?)\)/i);
+        field.message_type = field.message_type.replace(key + ".", value + ".");
+      }
       msgLines.push(
         `  ${LABEL_MAP[field.label]} ${
           field.type === 11 ? field.message_type : TYPE_MAP[field.type]
