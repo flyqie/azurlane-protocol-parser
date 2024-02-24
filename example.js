@@ -1,4 +1,4 @@
-const { parse } = require("azurlane-protocol-parser");
+const { parse } = require("@flyqie/azurlane-protocol-parser");
 const fs = require('fs');
 const path = require('path');
 
