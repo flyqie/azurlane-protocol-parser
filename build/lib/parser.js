@@ -42,7 +42,7 @@ function parse(data) {
     for (const line of lines) {
         if (importMatcher.test(line)) {
             const [, key, value] = line.match(importMatcher);
-            _imports[key] = value.split("_")[0];
+            _imports[key] = value;
         }
         else if (descriptorMatcher.test(line)) {
             const [key] = line.split("=").map((x) => x.trim());
@@ -163,7 +163,7 @@ function parse(data) {
         for (const lib in imports) {
             if (lib === "slot0")
                 continue;
-            file.push(`import "${imports[lib]}_pb.proto";`);
+            file.push(`import "${imports[lib]}.proto";`);
         }
         file.push("");
     }
